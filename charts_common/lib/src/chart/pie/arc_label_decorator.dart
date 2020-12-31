@@ -196,6 +196,7 @@ class ArcLabelDecorator<D> extends ArcRendererDecorator<D> {
         if (calculatedLabelPosition == ArcLabelPosition.inside) {
           _drawInsideLabel(canvas, arcElements, labelElement, centerAngle);
         } else {
+          final outsideLabelColorFn = element.series.outsideLabelColorFn;
           final l = _drawOutsideLabel(
               canvas,
               drawBounds,
@@ -203,7 +204,9 @@ class ArcLabelDecorator<D> extends ArcRendererDecorator<D> {
               labelElement,
               centerAngle,
               previousOutsideLabelY,
-              previousLabelLeftOfChart);
+              previousLabelLeftOfChart,
+              (outsideLabelColorFn != null) ? outsideLabelColorFn(datumIndex) : null
+          );
 
           // List destructuring..
           if (l != null) {
@@ -266,7 +269,9 @@ class ArcLabelDecorator<D> extends ArcRendererDecorator<D> {
       TextElement labelElement,
       double centerAngle,
       num previousOutsideLabelY,
-      bool previousLabelLeftOfChart) {
+      bool previousLabelLeftOfChart,
+      Color strokeColor,
+      ) {
     final labelRadius = arcElements.radius + leaderLineStyleSpec.length / 2;
 
     final labelPoint = Point<double>(
@@ -298,7 +303,7 @@ class ArcLabelDecorator<D> extends ArcRendererDecorator<D> {
 
     if (showLeaderLines) {
       final tailX = _drawLeaderLine(canvas, labelLeftOfChart, labelPoint,
-          arcElements.radius, arcElements.center, centerAngle);
+          arcElements.radius, arcElements.center, centerAngle, strokeColor);
 
       // Shift the label horizontally by the length of the leader line.
       labelX = (labelX + tailX).round();
@@ -344,7 +349,9 @@ class ArcLabelDecorator<D> extends ArcRendererDecorator<D> {
       Point labelPoint,
       double radius,
       Point<double> arcCenterPoint,
-      double centerAngle) {
+      double centerAngle,
+      Color strokeColor,
+      ) {
     final tailX = (labelLeftOfChart ? -1 : 1) * leaderLineStyleSpec.length;
 
     final leaderLineTailPoint =
@@ -361,7 +368,7 @@ class ArcLabelDecorator<D> extends ArcRendererDecorator<D> {
           labelPoint,
           leaderLineTailPoint,
         ],
-        stroke: leaderLineStyleSpec.color,
+        stroke: strokeColor ?? leaderLineStyleSpec.color,
         strokeWidthPx: leaderLineStyleSpec.thickness);
 
     return tailX;

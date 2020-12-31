@@ -100,6 +100,7 @@ class Series<T, D> {
   final AccessorFn<String> labelAccessorFn;
   final AccessorFn<TextStyleSpec> insideLabelStyleAccessorFn;
   final AccessorFn<TextStyleSpec> outsideLabelStyleAccessorFn;
+  final AccessorFn<Color> outsideLabelColorFn;
 
   // TODO: should this be immutable as well? If not, should any of
   // the non-required ones be final?
@@ -124,7 +125,8 @@ class Series<T, D> {
       TypedAccessorFn<T, String> keyFn,
       TypedAccessorFn<T, String> labelAccessorFn,
       TypedAccessorFn<T, TextStyleSpec> insideLabelStyleAccessorFn,
-      TypedAccessorFn<T, TextStyleSpec> outsideLabelStyleAccessorFn,
+      TypedAccessorFn<T, TextStyleSpec> outsideLabelStyleAccessorFn, 
+      TypedAccessorFn<T, Color> outsideLabelColorFn,
       TypedAccessorFn<T, MeasureFormatter> measureFormatterFn,
       TypedAccessorFn<T, num> measureLowerBoundFn,
       TypedAccessorFn<T, num> measureUpperBoundFn,
@@ -171,6 +173,8 @@ class Series<T, D> {
     final _outsideLabelStyleAccessorFn = outsideLabelStyleAccessorFn == null
         ? null
         : (int index) => outsideLabelStyleAccessorFn(data[index], index);
+    final _outsideLabelColorFn = 
+        outsideLabelColorFn == null ? null : (int index) => outsideLabelColorFn(data[index], index);
     final _measureFormatterFn = measureFormatterFn == null
         ? null
         : (int index) => measureFormatterFn(data[index], index);
@@ -211,6 +215,7 @@ class Series<T, D> {
       labelAccessorFn: _labelAccessorFn,
       insideLabelStyleAccessorFn: _insideLabelStyleAccessorFn,
       outsideLabelStyleAccessorFn: _outsideLabelStyleAccessorFn,
+      outsideLabelColorFn: _outsideLabelColorFn,
       measureFormatterFn: _measureFormatterFn,
       measureLowerBoundFn: _measureLowerBoundFn,
       measureUpperBoundFn: _measureUpperBoundFn,
@@ -242,6 +247,7 @@ class Series<T, D> {
     this.labelAccessorFn,
     this.insideLabelStyleAccessorFn,
     this.outsideLabelStyleAccessorFn,
+    this.outsideLabelColorFn,
     this.measureFormatterFn,
     this.measureLowerBoundFn,
     this.measureUpperBoundFn,
