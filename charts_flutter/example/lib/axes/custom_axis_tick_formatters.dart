@@ -16,11 +16,8 @@
 /// Example of timeseries chart with custom measure and domain formatters.
 import 'dart:math';
 
-// EXCLUDE_FROM_GALLERY_DOCS_END
 import 'package:charts_flutter/flutter.dart' as charts;
-// ignore: implementation_imports
 import 'package:charts_flutter/src/text_element.dart' as TextElement;
-// ignore: implementation_imports
 import 'package:charts_flutter/src/text_style.dart' as style;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -117,74 +114,77 @@ class CustomAxisTickFormatters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new charts.TimeSeriesChart(
-      seriesList,
-      animate: false,
-      // Sets up a currency formatter for the measure axis.
-      primaryMeasureAxis: new charts.NumericAxisSpec(
-        renderSpec: charts.GridlineRendererSpec(
-          lineStyle: charts.LineStyleSpec(
-            dashPattern: [],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return new charts.TimeSeriesChart(
+          seriesList,
+          animate: false,
+          primaryMeasureAxis: new charts.NumericAxisSpec(
+            renderSpec: charts.GridlineRendererSpec(
+              lineStyle: charts.LineStyleSpec(
+                dashPattern: [],
+              ),
+              labelOffsetFromAxisPx: 8,
+            ),
+            tickProviderSpec: charts.StaticNumericTickProviderSpec(
+              [
+                new charts.TickSpec(0, label: '0%'),
+                new charts.TickSpec(20, label: '20%'),
+                new charts.TickSpec(40, label: '40%'),
+                new charts.TickSpec(60, label: '60%'),
+                new charts.TickSpec(80, label: '80%'),
+                new charts.TickSpec(100, label: '100%'),
+              ],
+            ),
           ),
-          labelOffsetFromAxisPx: 8,
-        ),
-        tickProviderSpec: charts.StaticNumericTickProviderSpec(
-          [
-            new charts.TickSpec(0, label: '0%'),
-            new charts.TickSpec(20, label: '20%'),
-            new charts.TickSpec(40, label: '40%'),
-            new charts.TickSpec(60, label: '60%'),
-            new charts.TickSpec(80, label: '80%'),
-            new charts.TickSpec(100, label: '100%'),
+          customSeriesRenderers: [
+            new charts.LineRendererConfig(
+              customRendererId: 'customLine',
+              strokeWidthPx: 3,
+              includePoints: true,
+            ),
           ],
-        ),
-      ),
-      customSeriesRenderers: [
-        new charts.LineRendererConfig(
-          customRendererId: 'customLine',
-          strokeWidthPx: 3,
-          includePoints: true,
-        ),
-      ],
-      domainAxis: new charts.DateTimeAxisSpec(
-        renderSpec: charts.SmallTickRendererSpec<DateTime>(
-          lineStyle: charts.LineStyleSpec(
-            color: charts.Color.transparent,
+          domainAxis: new charts.DateTimeAxisSpec(
+            renderSpec: charts.SmallTickRendererSpec<DateTime>(
+              lineStyle: charts.LineStyleSpec(
+                color: charts.Color.transparent,
+              ),
+              labelOffsetFromAxisPx: 16,
+            ),
+            tickProviderSpec: new charts.StaticDateTimeTickProviderSpec(seriesList.first.data.map(
+              (e) {
+                DateTime time = (e as MyRow).timeStamp;
+                var dataFormat = DateFormat('MM-dd');
+                String formatResult = dataFormat.format(time);
+                return charts.TickSpec(time, label: '$formatResult');
+              },
+            ).toList()),
+            showAxisLine: false,
           ),
-          labelOffsetFromAxisPx: 16,
-        ),
-        tickProviderSpec: new charts.StaticDateTimeTickProviderSpec(seriesList.first.data.map(
-          (e) {
-            DateTime time = (e as MyRow).timeStamp;
-            var dataFormat = DateFormat('MM-dd');
-            String formatResult = dataFormat.format(time);
-            return charts.TickSpec(time, label: '$formatResult');
-          },
-        ).toList()),
-        showAxisLine: false,
-      ),
-      selectionModels: [
-        charts.SelectionModelConfig(
-          changedListener: (charts.SelectionModel model) {
-            if (model.hasDatumSelection) {
-              initData();
-              model.selectedDatum.forEach((charts.SeriesDatum object) {
-                selectedObjects.add(SelectedObject(
-                  id: object.series.id,
-                  value: object.datum.cost,
-                  fillColor: object.series.colorFn(0),
-                ));
-              });
-            }
-          },
-        )
-      ],
-      behaviors: [
-        charts.LinePointHighlighter(
-          dashPattern: [],
-          symbolRenderer: new PopupRenderer(),
-        ),
-      ],
+          selectionModels: [
+            charts.SelectionModelConfig(
+              changedListener: (charts.SelectionModel model) {
+                if (model.hasDatumSelection) {
+                  initData();
+                  model.selectedDatum.forEach((charts.SeriesDatum object) {
+                    selectedObjects.add(SelectedObject(
+                      id: object.series.id,
+                      value: object.datum.cost,
+                      fillColor: object.series.colorFn(0),
+                    ));
+                  });
+                }
+              },
+            )
+          ],
+          behaviors: [
+            charts.LinePointHighlighter(
+              dashPattern: [],
+              symbolRenderer: new PopupRenderer(maxWidth: constraints.maxWidth),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -213,6 +213,10 @@ class SelectedObject {
 }
 
 class PopupRenderer extends charts.CustomSymbolRenderer {
+  PopupRenderer({this.maxWidth});
+
+  final double maxWidth;
+
   void _drawObject(
     charts.ChartCanvas canvas,
     Point position,
@@ -280,6 +284,9 @@ class PopupRenderer extends charts.CustomSymbolRenderer {
     );
     if (positionsY.length == selectedObjects.length) {
       Point offset = Point(bounds.left + 30, positionsY.reduce((a, b) => a + b) / positionsY.length);
+      if (bounds.left + 30 + 138 > maxWidth) {
+        offset = Point(bounds.left - 30 - 138, positionsY.reduce((a, b) => a + b) / positionsY.length);
+      }
       canvas.drawRRect(
         Rectangle(offset.x, offset.y, 138.0, 71.0),
         fill: charts.Color.white,
